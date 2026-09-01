@@ -1,0 +1,16 @@
+[project]
+name = "agenttune"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "flask==3.1.0",
+    "numpy==2.2.5",
+    "openai==1.76.0",
+    "pandas==2.2.3",
+    "paramiko==3.5.1",
+    "pglast==8.4",
+    "pymysql==1.1.1",
+    "requests==2.32.3",
+]
