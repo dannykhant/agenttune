@@ -28,13 +28,19 @@ database_scale=config['knob selector']['database_scale']
 
 def extract_knob_intervals_with_ids(text):
     # Some models (e.g. Gemini) return a JSON object instead of the markdown
-    # paragraph format below; parse that directly, keeping the markdown parser
+    # paragraph format below, parse that directly, keeping the markdown parser
     # as a fallback.
     text = text or ""
     stripped = text.strip()
-    if stripped.startswith("```"):
-        stripped = re.sub(r"^```[a-zA-Z]*", "", stripped).strip()
-        stripped = re.sub(r"```$", "", stripped).strip()
+    # The JSON object may be prefixed by prose; find the first fenced or
+    # bare "{...}" block anywhere in the response.
+    fenced = re.search(r"```[a-zA-Z]*\s*(\{.*?\})\s*```", stripped, re.DOTALL)
+    if fenced:
+        stripped = fenced.group(1).strip()
+    else:
+        braced = re.search(r"\{.*?\}", stripped, re.DOTALL)
+        if braced:
+            stripped = braced.group(0).strip()
     if stripped.startswith("{"):
         try:
             data = json.loads(stripped)

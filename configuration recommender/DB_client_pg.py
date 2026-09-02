@@ -151,6 +151,10 @@ def get_current_knob():
         '128kB': 128 * 1024,
         '256kB': 256 * 1024,
         '512kB': 512 * 1024,
+        'ms': 1,
+        's': 1000,
+        'min': 60000,
+        'us': 1,
     }
 
     knobs = {}
@@ -194,6 +198,33 @@ def get_knob_contexts():
     cursor = conn.cursor()
     cursor.execute("SELECT name, context FROM pg_settings")
     result = dict(cursor.fetchall())
+    cursor.close()
+    conn.close()
+    return result
+
+
+def get_knob_native_bounds():
+    """Map knob name -> {unit, min, max} as reported by pg_settings.
+
+    pg_settings stores values/bounds in the knob's native unit (e.g. seconds
+    for checkpoint_timeout, kB for work_mem), while the tuning pipeline works
+    in a normalized space (bytes for memory, ms for time). The apply step needs
+    these native bounds to convert back and clamp before ALTER SYSTEM SET.
+    """
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, unit, min_val, max_val FROM pg_settings")
+    result = {}
+    for name, unit, min_val, max_val in cursor.fetchall():
+        def to_num(v):
+            if v is None:
+                return None
+            try:
+                f = float(v)
+            except (TypeError, ValueError):
+                return None
+            return int(f) if f == int(f) else f
+        result[name] = {'unit': unit, 'min': to_num(min_val), 'max': to_num(max_val)}
     cursor.close()
     conn.close()
     return result
@@ -250,6 +281,43 @@ def set_knobs_and_restart(knob):
 
     contexts = get_knob_contexts()
     needs_restart = any(contexts.get(name) == 'postmaster' for name in named_config)
+
+    # The pipeline works in a normalized unit space (bytes for memory, ms for
+    # time). pg_settings reports values in native units (kB, s, ...), so the
+    # normalized values must be converted back before ALTER SYSTEM SET, and
+    # clamped to the native bounds as a safety net against out-of-range LLM
+    # recommendations (e.g. checkpoint_timeout 900000 ms -> 900 s).
+    units = {
+        'B': 1,
+        'kB': 1024,
+        'MB': 1024 ** 2,
+        'GB': 1024 ** 3,
+        'TB': 1024 ** 4,
+        '8kB': 8 * 1024,
+        '16kB': 16 * 1024,
+        '32kB': 32 * 1024,
+        '64kB': 64 * 1024,
+        '128kB': 128 * 1024,
+        '256kB': 256 * 1024,
+        '512kB': 512 * 1024,
+        'ms': 1,
+        's': 1000,
+        'min': 60000,
+        'us': 1,
+    }
+    native_bounds = get_knob_native_bounds()
+    for name, value in list(named_config.items()):
+        if not isinstance(value, (int, float)):
+            continue
+        info = native_bounds.get(name)
+        unit = info['unit'] if info else None
+        factor = units.get(unit, 1)
+        native_value = value / factor
+        if info is not None and info['min'] is not None and info['max'] is not None:
+            native_value = min(max(native_value, info['min']), info['max'])
+        if isinstance(native_value, float) and native_value.is_integer():
+            native_value = int(native_value)
+        named_config[name] = native_value
 
     conn = psycopg2.connect(**db_config)
     conn.autocommit = True
