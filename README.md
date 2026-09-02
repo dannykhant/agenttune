@@ -63,3 +63,33 @@ Overrides (password, database, ports) go in `.env` — copy `.env.example`.
 Set the LLM `api_key`/`base_url`/`model` in `config.ini` (OpenAI-compatible;
 Google Gemini works via `base_url=https://generativelanguage.googleapis.com/v1beta/openai/`).
 For benchmarks on the host DB set `QueryDir` and `benchmark=SYSBENCH|TPCC|JOB|TPCDS`.
+
+## Baseline integrity: run-blocking fixes only
+
+This repository is used as the AgentTune SOTA baseline. The only deviations from
+the upstream code are **bug fixes required to execute the published pipeline**
+(PostgreSQL path). No tuning-strategy, prompt, or evaluation-criteria changes
+were made:
+
+- `configuration recommender/DB_client_pg.py`
+  - `get_current_knob()`: report time knobs (e.g. `checkpoint_timeout`) in the
+    same millisecond unit space used by the pruned ranges, so current values and
+    ranges stay consistent.
+  - `set_knobs_and_restart()`: convert normalized values back to PostgreSQL
+    native units and clamp to `pg_settings` bounds before `ALTER SYSTEM SET`
+    (otherwise `checkpoint_timeout` in ms crashes with "900000 s is outside the
+    valid range").
+  - `test_by_sysbench()`: auto-`cleanup`/`prepare` the sysbench tables when they
+    are missing (otherwise the benchmark segfaults and reports 0 throughput).
+- `configuration recommender/LLM_server.py`: add a monotonic tiebreaker to the
+  history heap so equal-throughput entries don't crash `heapq`.
+- `configuration recommender/config_rank.py`: when the LLM omits a knob from a
+  recommendation, fill it with a numeric default (midpoint of its pruned range,
+  or `special_value`) instead of the whole range-spec dict, which crashed the
+  ranking average with `float + dict`.
+- `range pruner/range_pruner.py`: clamp LLM-proposed knob ranges into the legal
+  bounds from `knob_details` (both JSON and markdown parse paths) so the database
+  is never set to unusable minimums.
+
+These changes do not alter AgentTune's tuning algorithm or how configurations
+are evaluated; they only make the baseline runnable as described in the paper.
