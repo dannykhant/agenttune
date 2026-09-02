@@ -12,6 +12,11 @@ services:
       - "${PG_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-postgres} -d ${PG_DATABASE:-agenttune}"]
       interval: 5s
