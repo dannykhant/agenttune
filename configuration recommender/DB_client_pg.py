@@ -466,14 +466,27 @@ def test_by_sysbench(knob):
     if state != 0:
         return 0
 
+    tables = 50
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+    cursor.execute("SELECT count(*) FROM information_schema.tables "
+                   "WHERE table_schema = 'public' AND table_name LIKE 'sbtest%'")
+    sbtest_count = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+
+    sysbench_args = '--db-driver=pgsql --threads=32 --pgsql-host={} --pgsql-port={} --pgsql-user={} --pgsql-password={} --pgsql-db={} --tables={} --table-size=1000000'.format(
+        db_config['host'], db_config['port'], db_config['user'],
+        db_config['password'], db_config['dbname'], tables)
+
+    if sbtest_count < tables:
+        print('sysbench tables missing, preparing {} tables'.format(tables))
+        os.system('sysbench {} oltp_read_write cleanup > /dev/null 2>&1'.format(sysbench_args))
+        os.system('sysbench {} oltp_read_write prepare > "{}" 2>&1'.format(
+            sysbench_args, './configuration recommender/log/sysbench_prepare.log'))
+
     log_file = './configuration recommender/log/' + '{}.log'.format(int(time.time()))
-    command_run = 'sysbench --db-driver=pgsql --threads=32 --pgsql-host={} --pgsql-port={} --pgsql-user={} --pgsql-password={} --pgsql-db={} --tables=50 --table-size=1000000 --time=120 --report-interval=60 oltp_read_write run'.format(
-        db_config['host'],
-        db_config['port'],
-        db_config['user'],
-        db_config['password'],
-        db_config['dbname']
-    )
+    command_run = 'sysbench {} --time=120 --report-interval=60 oltp_read_write run'.format(sysbench_args)
     os.system(command_run + ' > "{}" '.format(log_file))
 
     qps = sum([float(line.split()[8]) for line in open(log_file, 'r').readlines() if 'qps' in line][-int(120 / 60):]) / (int(120 / 60))

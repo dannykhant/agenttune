@@ -22,10 +22,34 @@ def process_config_item(item):
 
 process_config_item
 
+
+def default_knob_value(spec):
+    """Numeric fallback for a knob the LLM omitted from a recommendation.
+
+    DEFAULT_CONFIG[key] is the pruned *range spec* (a dict with min_value /
+    max_value / step), not a single value, so using it directly as a fallback
+    crashes the average computation below with 'float + dict'.
+    """
+    if isinstance(spec.get('special_value'), (int, float)):
+        return spec['special_value']
+    lo = spec.get('min_value')
+    hi = spec.get('max_value')
+    if isinstance(lo, (int, float)) and isinstance(hi, (int, float)):
+        return (lo + hi) / 2.0
+    return 0
+
+
+def fill_knob(item, key):
+    value = item.get(key)
+    if isinstance(value, (int, float)):
+        return value
+    return default_knob_value(DEFAULT_CONFIG[key])
+
+
 def sort_list(json_strings):
     raw_data = [json.loads(s) for s in json_strings if s.strip()]
     processed_data = [
-        {key: item.get(key, DEFAULT_CONFIG[key]) for key in DEFAULT_CONFIG}
+        {key: fill_knob(item, key) for key in DEFAULT_CONFIG}
         for item in raw_data
     ]
 

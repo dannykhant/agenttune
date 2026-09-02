@@ -26,6 +26,63 @@ hardware=config['knob selector']['hardware']
 database_scale=config['knob selector']['database_scale']
 
 
+def sanitize_ranges(parsed):
+    """Clamp LLM-proposed ranges into the knob's legal config bounds.
+
+    The JSON parse path (used by Gemini) skipped the bounds validation that the
+    markdown path did, so out-of-bounds ranges (e.g. shared_buffers proposed in
+    bytes below its minimum) reached the recommender and produced unusable
+    configurations. When a proposed range is invalid, fall back to the full
+    legal bounds so the recommender never sees a degenerate range.
+    """
+    sanitized = {}
+    for knob_id, entry in parsed.items():
+        config = knob_details.get(knob_id, {})
+        config_min = config.get('min')
+        config_max = config.get('max')
+        if config_min is None or config_max is None:
+            continue
+
+        def to_num(v):
+            if isinstance(v, bool):
+                return int(v)
+            if isinstance(v, (int, float)):
+                return v
+            try:
+                f = float(v)
+            except (TypeError, ValueError):
+                return None
+            return int(f) if f == int(f) else f
+
+        vartype = entry.get('type', config.get('type', 'integer'))
+        lo = to_num(entry.get('min_value'))
+        hi = to_num(entry.get('max_value'))
+        step = to_num(entry.get('step'))
+
+        valid = (lo is not None and hi is not None and lo < hi and
+                 lo >= config_min and hi <= config_max)
+        if not valid:
+            lo, hi = config_min, config_max
+        if vartype == 'real':
+            if step is None or step <= 0 or step > (hi - lo):
+                step = round((hi - lo) / 20.0, 4) or 1.0
+        else:
+            if step is None or step <= 0 or step > (hi - lo):
+                step = max(1, int((hi - lo) / 20))
+
+        clean = {
+            'min_value': lo,
+            'max_value': hi,
+            'step': step,
+            'type': vartype,
+            'description': entry.get('description', config.get('description', '')),
+        }
+        if entry.get('special_value') is not None:
+            clean['special_value'] = entry['special_value']
+        sanitized[knob_id] = clean
+    return sanitized
+
+
 def extract_knob_intervals_with_ids(text):
     # Some models (e.g. Gemini) return a JSON object instead of the markdown
     # paragraph format below, parse that directly, keeping the markdown parser
@@ -79,13 +136,12 @@ def extract_knob_intervals_with_ids(text):
                         entry["special_value"] = special
                 parsed[knob_id] = entry
             if parsed:
-                return parsed
+                return sanitize_ranges(parsed)
 
     # Split by Knob Paragraph
     knob_blocks = re.split(r'\n\d+\.\s+\*\*(knob\d+)\s+\((.*?)\)\*\*:', text)
     knobs = {}
-    validation_errors = []
-    
+
     for i in range(1, len(knob_blocks), 3):
         knob_id = knob_blocks[i]  # e.g., "knob42"
         block_text = knob_blocks[i+2]
@@ -105,41 +161,8 @@ def extract_knob_intervals_with_ids(text):
             }
             if special_match:
                 knobs[knob_id]["special_value"] = int(special_match.group(1))
-        
-        #Safe Check
-        error_messages=[]
-        config_min = knob_details[knob_id]["min"]
-        config_max = knob_details[knob_id]["max"]
-        min_val = int(min_match.group(1))
-        max_val = int(max_match.group(1))
 
-        if isinstance(min_val, int) and not (config_min <= min_val <= config_max):
-            error_messages.append(f"min_val{min_val}out of bounds{config_min}-{config_max}]")
-            
-        if isinstance(max_val, int) and not (config_min <= max_val <= config_max):
-            error_messages.append(f"max_val{max_val}out of bounds[{config_min}-{config_max}]")
-            
-        if isinstance(min_val, int) and isinstance(max_val, int) and min_val > max_val:
-            error_messages.append(f"min_val{min_val}larger than{max_val}")
-
-        #Record validation errors
-        if error_messages:
-            validation_errors.append({
-                "parameter": knob_name,
-                "errors": error_messages,
-                "received": {
-                    "min": min_val,
-                    "max": max_val
-                }
-            })
-            continue
-            
-    if validation_errors:
-        print("Error:")
-        for error in validation_errors:
-            print(json.dumps(error, indent=2, ensure_ascii=False))
-
-    return knobs
+    return sanitize_ranges(knobs)
 
 def call_open_source_llm(model,knob_list):
     client = OpenAI(

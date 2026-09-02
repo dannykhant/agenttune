@@ -127,12 +127,14 @@ history_top = []
 last_result = ""
 app = Flask(__name__)
 request_count = 0
+_seq = 0
 @app.route('/process', methods=['POST'])
 def process_data():
 
 
     global request_count
     global history_top
+    global _seq
     request_count += 1
     filename = f'./configuration recommender/record/turn_{request_count}'
     file = open(filename, 'w')
@@ -140,6 +142,7 @@ def process_data():
 
     data = request.get_json()
     for item in data:
+        _seq += 1
         last_knobs = item.get('knob')
         throughput = item.get('throughput')
         now_inner_metrics = item.get('metric')
@@ -153,10 +156,10 @@ def process_data():
 
         if len(history_top) < int(config['configuration recommender']['history_num']):
             # If the queue is not full, join directly
-            heapq.heappush(history_top, (throughput, item))
+            heapq.heappush(history_top, (throughput, _seq, item))
         else:
             # update the queue
-            heapq.heappushpop(history_top, (throughput, item))
+            heapq.heappushpop(history_top, (throughput, _seq, item))
 
         if throughput == 0 :
             throughput = "0, because database starting failed under current configuration"
@@ -164,7 +167,7 @@ def process_data():
         sorted_history = sorted(history_top, key=lambda x: -x[0])  
         # Sort by performance
         history_entries = []
-        for idx, (t, item) in enumerate(sorted_history, 1):
+        for idx, (t, _, item) in enumerate(sorted_history, 1):
             knob_str = json.dumps(item['knob'], indent=4)
             metric_str = json.dumps(item['metric'], indent=4)
             history_entries.append(
