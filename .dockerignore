@@ -1,0 +1,7 @@
+# keep the build context small
+.git
+.venv
+__pycache__
+*.pyc
+.agents
+*.log

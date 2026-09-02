@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:17
+    platform: linux/amd64
+    container_name: agenttune-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-agenttune}
+      POSTGRES_DB: ${PG_DATABASE:-agenttune}
+    ports:
+      - "${PG_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-postgres} -d ${PG_DATABASE:-agenttune}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  agenttune:
+    build:
+      context: .
+      dockerfile: docker/agenttune/Dockerfile
+    container_name: agenttune
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      # repo is bind-mounted so config.ini / code edits apply without a rebuild
+      - .:/app
+      # shared docker socket: lets this container run `docker restart agenttune-pg`
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${LLM_PORT:-4000}:4000"
+    stdin_open: true
+    tty: true
+    command: ["tail", "-f", "/dev/null"]
+
+volumes:
+  pgdata:
