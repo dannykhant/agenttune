@@ -8,3 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Project-specific files
+config.ini
+workload analyzer/workload_features
