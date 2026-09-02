@@ -19,7 +19,11 @@ def rename_knobs(input_file, output_file):
 
 config = configparser.ConfigParser()
 config.read('./config.ini')
-input_file=config['knob selector']['candidate_knobs']
+dbms = config.get('configuration recommender', 'dbms', fallback='mysql')
+if dbms == 'postgresql':
+    input_file = "./knob selector/candidate_knobs_pg"
+else:
+    input_file = config['knob selector']['candidate_knobs']
 output_file="./knob selector/renamed_knobs"
 rename_knobs(
     input_file,

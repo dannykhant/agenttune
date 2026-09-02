@@ -1,0 +1,324 @@
+{
+    "checkpoint_flush_after": {
+        "max": 2097152,
+        "min": 0,
+        "type": "integer",
+        "description": "Number of pages after which previously performed writes are flushed to disk."
+    },
+    "wal_buffers": {
+        "max": 2147475456,
+        "min": -8192,
+        "type": "integer",
+        "description": "Sets the number of disk-page buffers in shared memory for WAL."
+    },
+    "backend_flush_after": {
+        "max": 2097152,
+        "min": 0,
+        "type": "integer",
+        "description": "Number of pages after which previously performed writes are flushed to disk."
+    },
+    "wal_writer_flush_after": {
+        "max": 2097152,
+        "min": 0,
+        "type": "integer",
+        "description": "Amount of WAL written out by WAL writer that triggers a flush."
+    },
+    "wal_writer_delay": {
+        "max": 10000,
+        "min": 1,
+        "type": "integer",
+        "description": "Time between WAL flushes performed in the WAL writer."
+    },
+    "commit_siblings": {
+        "max": 1000,
+        "min": 0,
+        "type": "integer",
+        "description": "Sets the minimum concurrent open transactions before performing commit_delay."
+    },
+    "seq_page_cost": {
+        "max": 100,
+        "min": 0,
+        "type": "real",
+        "description": "Sets the planner's estimate of the cost of a sequentially fetched disk page."
+    },
+    "commit_delay": {
+        "max": 100000,
+        "min": 0,
+        "type": "integer",
+        "description": "Sets the delay in microseconds between transaction commit and flushing WAL to disk."
+    },
+    "join_collapse_limit": {
+        "max": 2147483647,
+        "min": 1,
+        "type": "integer",
+        "description": "Sets the FROM-list size beyond which JOIN constructs are not flattened. The planner will flatten explicit JOIN constructs into lists of FROM items whenever a list of no more than this many items would result."
+    },
+    "from_collapse_limit": {
+        "max": 2147483647,
+        "min": 1,
+        "type": "integer",
+        "description": "Sets the FROM-list size beyond which subqueries are not collapsed. The planner will merge subqueries into upper queries if the resulting FROM list would have no more than this many items."
+    },
+    "bgwriter_flush_after": {
+        "max": 2097152,
+        "min": 0,
+        "type": "integer",
+        "description": "Number of pages after which previously performed writes are flushed to disk."
+    },
+    "deadlock_timeout": {
+        "max": 2147483647,
+        "min": 1,
+        "type": "integer",
+        "description": "Sets the time to wait on a lock before checking for deadlock."
+    },
+    "wal_sync_method": {
+        "enum_values": [
+            "fsync",
+            "fdatasync",
+            "open_sync",
+            "open_datasync"
+        ],
+        "type": "enum",
+        "description": "Selects the method used for forcing WAL updates to disk."
+    },
+    "bgwriter_lru_multiplier": {
+        "max": 10,
+        "min": 0,
+        "type": "real",
+        "description": "Multiple of the average buffer usage to free per round."
+    },
+    "effective_io_concurrency": {
+        "max": 1024,
+        "min": 0,
+        "type": "integer",
+        "description": "Number of simultaneous requests that can be handled efficiently by the disk subsystem."
+    },
+    "max_connections": {
+        "max": 262143,
+        "min": 1,
+        "type": "integer",
+        "description": "Sets the maximum number of concurrent connections."
+    },
+    "max_worker_processes": {
+        "max": 262143,
+        "min": 0,
+        "type": "integer",
+        "description": "Maximum number of concurrent worker processes."
+    },
+    "max_parallel_workers_per_gather": {
+        "max": 1024,
+        "min": 0,
+        "type": "integer",
+        "description": "Sets the maximum number of parallel processes per executor node."
+    },
+    "max_parallel_workers": {
+        "max": 1024,
+        "min": 0,
+        "type": "integer",
+        "description": "Sets the maximum number of parallel workers that can be active at one time."
+    },
+    "max_wal_senders": {
+        "max": 1024,
+        "min": 0,
+        "type": "integer",
+        "description": "Sets the maximum number of simultaneously running WAL sender processes."
+    },
+    "shared_buffers": {
+        "max": 8796093014016,
+        "min": 131072,
+        "type": "integer",
+        "description": "Sets the number of shared memory buffers used by the server."
+    },
+    "huge_pages": {
+        "enum_values": [
+            "off",
+            "on",
+            "try"
+        ],
+        "type": "enum",
+        "description": "Use of huge pages on Linux or Windows."
+    },
+    "work_mem": {
+        "max": 2199023254528,
+        "min": 65536,
+        "type": "integer",
+        "description": "Sets the maximum memory to be used for query workspaces. This much memory can be used by each internal sort operation and hash table before switching to temporary disk files."
+    },
+    "maintenance_work_mem": {
+        "max": 2199023254528,
+        "min": 1048576,
+        "type": "integer",
+        "description": "Sets the maximum memory to be used for maintenance operations. This includes operations such as VACUUM and CREATE INDEX."
+    },
+    "logging_collector": {
+        "max": 1,
+        "min": 0,
+        "type": "integer",
+        "description": "Start a subprocess to capture stderr output and/or csvlogs into log files."
+    },
+    "log_rotation_size": {
+        "max": 2147482624,
+        "min": 0,
+        "type": "integer",
+        "description": "Automatic log file rotation will occur after N kilobytes."
+    },
+    "log_checkpoints": {
+        "max": 1,
+        "min": 0,
+        "type": "integer",
+        "description": "Logs each checkpoint."
+    },
+    "log_connections": {
+        "max": 1,
+        "min": 0,
+        "type": "integer",
+        "description": "Logs each successful connection."
+    },
+    "log_disconnections": {
+        "max": 1,
+        "min": 0,
+        "type": "integer",
+        "description": "Logs end of a session, including duration."
+    },
+    "log_temp_files": {
+        "max": 2199023254528,
+        "min": -1024,
+        "type": "integer",
+        "description": "Log the use of temporary files larger than this number of kilobytes. Zero logs all files. The default is -1 (turning this feature off)."
+    },
+    "checkpoint_timeout": {
+        "max": 86400000,
+        "min": 30000,
+        "type": "integer",
+        "description": "Sets the maximum time between automatic WAL checkpoints."
+    },
+    "checkpoint_completion_target": {
+        "max": 1,
+        "min": 0,
+        "type": "real",
+        "description": "Time spent flushing dirty buffers during checkpoint, as fraction of checkpoint interval."
+    },
+    "min_wal_size": {
+        "max": 1125899906842624,
+        "min": 83886080,
+        "type": "integer",
+        "description": "Sets the minimum size to shrink the WAL to."
+    },
+    "max_wal_size": {
+        "max": 2251799813685248,
+        "min": 83886080,
+        "type": "integer",
+        "description": "Sets the WAL size that triggers a checkpoint."
+    },
+    "checkpoint_warning": {
+        "max": 3600000,
+        "min": 0,
+        "type": "integer",
+        "description": "Enables warnings if checkpoint segments are filled more frequently than this. Write a message to the server log if checkpoints caused by the filling of checkpoint segment files happens more frequently than this number of seconds. Zero turns off the warning."
+    },
+    "bgwriter_delay": {
+        "max": 10000,
+        "min": 10,
+        "type": "integer",
+        "description": "Background writer sleep time between rounds."
+    },
+    "bgwriter_lru_maxpages": {
+        "max": 1000,
+        "min": 0,
+        "type": "integer",
+        "description": "Background writer maximum number of LRU pages to flush per round."
+    },
+    "vacuum_cost_limit": {
+        "max": 10000,
+        "min": 1,
+        "type": "integer",
+        "description": "Vacuum cost amount available before napping."
+    },
+    "autovacuum_max_workers": {
+        "max": 262143,
+        "min": 1,
+        "type": "integer",
+        "description": "Sets the maximum number of simultaneously running autovacuum worker processes."
+    },
+    "autovacuum_vacuum_scale_factor": {
+        "max": 1,
+        "min": 0,
+        "type": "real",
+        "description": "Number of tuple updates or deletes prior to vacuum as a fraction of reltuples."
+    },
+    "autovacuum_analyze_scale_factor": {
+        "max": 1,
+        "min": 0,
+        "type": "real",
+        "description": "Number of tuple inserts, updates, or deletes prior to analyze as a fraction of reltuples."
+    },
+    "autovacuum_freeze_max_age": {
+        "max": 2000000000,
+        "min": 100000,
+        "type": "integer",
+        "description": "Age at which to autovacuum a table to prevent transaction ID wraparound."
+    },
+    "vacuum_cost_delay": {
+        "max": 100,
+        "min": 0,
+        "type": "real",
+        "description": "Vacuum cost delay in milliseconds."
+    },
+    "max_replication_slots": {
+        "max": 1024,
+        "min": 0,
+        "type": "integer",
+        "description": "Sets the maximum number of simultaneously defined replication slots."
+    },
+    "hot_standby_feedback": {
+        "max": 1,
+        "min": 0,
+        "type": "integer",
+        "description": "Allows feedback from a hot standby to the primary that will avoid query conflicts."
+    },
+    "max_standby_streaming_delay": {
+        "max": 2147483647,
+        "min": -1,
+        "type": "integer",
+        "description": "Sets the maximum delay before canceling queries when a hot standby server is processing streamed WAL data."
+    },
+    "effective_cache_size": {
+        "max": 17592186036224,
+        "min": 8192,
+        "type": "integer",
+        "description": "Sets the planner's assumption about the total size of the data caches. That is, the total size of the caches (kernel cache and shared buffers) used for PostgreSQL data files. This is measured in disk pages, which are normally 8 kB each."
+    },
+    "default_statistics_target": {
+        "max": 10000,
+        "min": 1,
+        "type": "integer",
+        "description": "Sets the default statistics target. This applies to table columns that have not had a column-specific target set via ALTER TABLE SET STATISTICS."
+    },
+    "random_page_cost": {
+        "max": 100,
+        "min": 0,
+        "type": "real",
+        "description": "Sets the planner's estimate of the cost of a nonsequentially fetched disk page."
+    },
+    "jit": {
+        "max": 1,
+        "min": 0,
+        "type": "integer",
+        "description": "Allow JIT compilation."
+    },
+    "archive_mode": {
+        "enum_values": [
+            "always",
+            "on",
+            "off"
+        ],
+        "type": "enum",
+        "description": "Allows archiving of WAL files using archive_command."
+    },
+    "track_activity_query_size": {
+        "max": 1048576,
+        "min": 100,
+        "type": "integer",
+        "description": "Sets the size reserved for pg_stat_activity.query, in bytes."
+    }
+}

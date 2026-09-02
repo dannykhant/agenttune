@@ -12,3 +12,7 @@ wheels/
 # Project-specific files
 config.ini
 workload analyzer/workload_features
+.agents/
+configuration recommender/record/
+configuration recommender/log/
+.env

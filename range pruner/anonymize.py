@@ -16,7 +16,11 @@ def rename_knobs(input_file, output_file):
 
 config = configparser.ConfigParser()
 config.read('./config.ini')
-input_file=config['range pruner']['knob_details']
+dbms = config.get('configuration recommender', 'dbms', fallback='mysql')
+if dbms == 'postgresql':
+    input_file = "./range pruner/knob_details_pg.json"
+else:
+    input_file = config['range pruner']['knob_details']
 output_file="./range pruner/renamed_knobs"
 rename_knobs(
     input_file,

@@ -22,7 +22,11 @@ with open(knob_list_path,"r") as f:
     knobs = json.load(f) 
 knobs = json.dumps(knobs, indent=4)
 
-metric_path = config['configuration recommender']['metric_file']
+dbms = config.get('configuration recommender', 'dbms', fallback='mysql')
+if dbms == 'postgresql':
+    metric_path = "./configuration recommender/inner_metric_pg"
+else:
+    metric_path = config['configuration recommender']['metric_file']
 with open(metric_path, "r") as f:
     inner_metrics = f.read().strip() 
 

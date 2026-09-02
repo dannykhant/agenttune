@@ -43,8 +43,20 @@ metric_file=./configuration recommender/inner_metric
 #Performance indicators to be optimized
 db_metric=throughput
 #LLM_server configuration
-LLM_server_IP=
+LLM_server_IP=localhost
 LLM_server_port=4000
+#DBMS to tune: mysql (default) or postgresql
+dbms=mysql
+#PostgreSQL settings (used when dbms=postgresql)
+PG_DataDir=/var/lib/postgresql/data
+PG_ServiceName=postgresql
+#how to run commands on the PostgreSQL host: ssh (default) or docker
+DB_RestartMethod=ssh
+#postgres container name (used when DB_RestartMethod=docker)
+PG_ContainerName=agenttune-pg
+#ssh mode: run on the DB host, e.g. `systemctl restart postgresql`
+#docker mode: full docker CLI command, e.g. `docker restart agenttune-pg`
+PG_RestartCommand=systemctl restart postgresql
 #DB_client configuration
 DB_IP=
 DB_IP_Password=
@@ -56,6 +68,8 @@ DB_Name=
 DB_Port=
 #iteration (number of workload replies)
 iteration=100
+#directory containing .sql query files (used by JOB/TPCDS benchmarks)
+QueryDir=
 #benchmarks (TPCC,TPCDS,SYSBENCH,JOB)
 benchmark=
 
