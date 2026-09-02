@@ -37,7 +37,12 @@ def extract_key_value_pairs(json_string):
     # match "key": value 
     pattern = re.compile(r'"(\w+)":\s*([\d.]+)')
     matches = pattern.findall(json_string)
-    data = {key: int(value) for key, value in matches}
+    data = {}
+    for key, value in matches:
+        try:
+            data[key] = int(value)
+        except ValueError:
+            data[key] = float(value)
     return data
 
 def convert_to_bytes(value):
@@ -119,6 +124,7 @@ def call_open_source_llm(model, messages,filename):
             print("No JSON configuration found in the input.")
 
 history_top = []
+last_result = ""
 app = Flask(__name__)
 request_count = 0
 @app.route('/process', methods=['POST'])
@@ -145,7 +151,7 @@ def process_data():
         print(now_inner_metrics)
         print(throughput)
 
-        if len(history_top) < config['configuration recommender']['history_num']:
+        if len(history_top) < int(config['configuration recommender']['history_num']):
             # If the queue is not full, join directly
             heapq.heappush(history_top, (throughput, item))
         else:
@@ -208,8 +214,9 @@ def process_data():
         model = config['configuration recommender']['model']
 
         global last_result
-        while i<config['configuration recommender']['node_count'] :
-            i = i+1
+        i = 0
+        while i < int(config['configuration recommender']['node_count']):
+            i = i + 1
             call_open_source_llm(model, messages1, filename)
     
     with open(filename, 'r') as f:

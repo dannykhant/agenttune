@@ -27,6 +27,54 @@ database_scale=config['knob selector']['database_scale']
 
 
 def extract_knob_intervals_with_ids(text):
+    # Some models (e.g. Gemini) return a JSON object instead of the markdown
+    # paragraph format below; parse that directly, keeping the markdown parser
+    # as a fallback.
+    text = text or ""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = re.sub(r"^```[a-zA-Z]*", "", stripped).strip()
+        stripped = re.sub(r"```$", "", stripped).strip()
+    if stripped.startswith("{"):
+        try:
+            data = json.loads(stripped)
+        except (ValueError, TypeError):
+            data = None
+        if isinstance(data, dict):
+            parsed = {}
+            def to_num(v):
+                if isinstance(v, bool):
+                    return int(v)
+                if isinstance(v, (int, float)):
+                    return v
+                try:
+                    f = float(v)
+                except (TypeError, ValueError):
+                    return None
+                return int(f) if f == int(f) else f
+            for knob_id, spec in data.items():
+                if not knob_id.startswith("knob") or not isinstance(spec, dict):
+                    continue
+                min_value = to_num(spec.get("min_value"))
+                max_value = to_num(spec.get("max_value"))
+                step = to_num(spec.get("step"))
+                if min_value is None or max_value is None or step is None:
+                    continue
+                entry = {
+                    "min_value": min_value,
+                    "max_value": max_value,
+                    "step": step,
+                    "type": knob_details.get(knob_id, {}).get("type", "integer"),
+                    "description": knob_details.get(knob_id, {}).get("description", ""),
+                }
+                if spec.get("special_value") is not None:
+                    special = to_num(spec["special_value"])
+                    if special is not None:
+                        entry["special_value"] = special
+                parsed[knob_id] = entry
+            if parsed:
+                return parsed
+
     # Split by Knob Paragraph
     knob_blocks = re.split(r'\n\d+\.\s+\*\*(knob\d+)\s+\((.*?)\)\*\*:', text)
     knobs = {}
