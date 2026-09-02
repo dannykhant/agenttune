@@ -272,7 +272,7 @@ def test_by_sysbench(knob):
                             config.get('database')
                             )
         
-        os.system(command_run + ' > {} '.format(log_file))
+        os.system(command_run + ' > "{}" '.format(log_file))
         
         qps = sum([float(line.split()[8]) for line in open(log_file,'r').readlines() if 'qps' in line][-int(120/60):]) / (int(120/60))
         tps = float(qps/20.0)
@@ -373,10 +373,9 @@ if __name__ == "__main__":
     while iteration < config['configuration recommender']['iteration']:
         #json_strings = result.strip().split('\n')
         data_list = []
-        for knobs in result:
-            if not knobs.strip():
+        for knob in result:
+            if not knob:
                 continue
-            knob = json.loads(knobs)
             benchmark = config['configuration recommender']['benchmark'].strip().upper()
             benchmark_switch = {
                 "SYSBENCH": test_by_sysbench,

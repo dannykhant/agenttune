@@ -366,7 +366,7 @@ def test_by_tpcc(knob):
         db_config['dbname']
     )
     os.environ['PGPASSWORD'] = db_config['password']
-    os.system(command + ' > {} '.format(log_file))
+    os.system(command + ' > "{}" '.format(log_file))
 
     tps = 0
     with open(log_file, 'r') as f:
@@ -406,7 +406,7 @@ def test_by_sysbench(knob):
         db_config['password'],
         db_config['dbname']
     )
-    os.system(command_run + ' > {} '.format(log_file))
+    os.system(command_run + ' > "{}" '.format(log_file))
 
     qps = sum([float(line.split()[8]) for line in open(log_file, 'r').readlines() if 'qps' in line][-int(120 / 60):]) / (int(120 / 60))
     tps = float(qps / 20.0)
@@ -469,10 +469,9 @@ if __name__ == "__main__":
     best_throughput = 0
     while iteration < int(config['configuration recommender']['iteration']):
         data_list = []
-        for knobs in result:
-            if not knobs.strip():
+        for knob in result:
+            if not knob:
                 continue
-            knob = json.loads(knobs)
             benchmark = config['configuration recommender']['benchmark'].strip().upper()
             benchmark_switch = {
                 "SYSBENCH": test_by_sysbench,

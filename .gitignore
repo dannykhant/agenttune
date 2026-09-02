@@ -16,3 +16,5 @@ workload analyzer/workload_features
 configuration recommender/record/
 configuration recommender/log/
 .env
+knob selector/selected_knobs
+range pruner/pruned_knobs
