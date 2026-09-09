@@ -9,7 +9,7 @@
         "type": "integer",
         "description": "Sets the number of disk-page buffers in shared memory for WAL.",
         "max": 2147475456,
-        "min": -8192
+        "min": 262144
     },
     "backend_flush_after": {
         "type": "integer",
@@ -126,8 +126,8 @@
     "shared_buffers": {
         "type": "integer",
         "description": "Sets the number of shared memory buffers used by the server.",
-        "max": 8796093014016,
-        "min": 131072
+        "max": 1073741824,
+        "min": 134217728
     },
     "huge_pages": {
         "type": "enum",
@@ -142,13 +142,13 @@
         "type": "integer",
         "description": "Sets the maximum memory to be used for query workspaces.",
         "max": 2199023254528,
-        "min": 65536
+        "min": 4194304
     },
     "maintenance_work_mem": {
         "type": "integer",
         "description": "Sets the maximum memory to be used for maintenance operations.",
         "max": 2199023254528,
-        "min": 1048576
+        "min": 16777216
     },
     "logging_collector": {
         "type": "integer",
@@ -285,8 +285,8 @@
     "effective_cache_size": {
         "type": "integer",
         "description": "Sets the planner's assumption about the total size of the data caches.",
-        "max": 17592186036224,
-        "min": 8192
+        "max": 1610612736,
+        "min": 1073741824
     },
     "default_statistics_target": {
         "type": "integer",

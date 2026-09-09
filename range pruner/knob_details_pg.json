@@ -7,7 +7,7 @@
     },
     "wal_buffers": {
         "max": 2147475456,
-        "min": -8192,
+        "min": 262144,
         "type": "integer",
         "description": "Sets the number of disk-page buffers in shared memory for WAL."
     },
@@ -124,8 +124,8 @@
         "description": "Sets the maximum number of simultaneously running WAL sender processes."
     },
     "shared_buffers": {
-        "max": 8796093014016,
-        "min": 131072,
+        "max": 1073741824,
+        "min": 134217728,
         "type": "integer",
         "description": "Sets the number of shared memory buffers used by the server."
     },
@@ -140,13 +140,13 @@
     },
     "work_mem": {
         "max": 2199023254528,
-        "min": 65536,
+        "min": 4194304,
         "type": "integer",
         "description": "Sets the maximum memory to be used for query workspaces. This much memory can be used by each internal sort operation and hash table before switching to temporary disk files."
     },
     "maintenance_work_mem": {
         "max": 2199023254528,
-        "min": 1048576,
+        "min": 16777216,
         "type": "integer",
         "description": "Sets the maximum memory to be used for maintenance operations. This includes operations such as VACUUM and CREATE INDEX."
     },
@@ -283,8 +283,8 @@
         "description": "Sets the maximum delay before canceling queries when a hot standby server is processing streamed WAL data."
     },
     "effective_cache_size": {
-        "max": 17592186036224,
-        "min": 8192,
+        "max": 1610612736,
+        "min": 1073741824,
         "type": "integer",
         "description": "Sets the planner's assumption about the total size of the data caches. That is, the total size of the caches (kernel cache and shared buffers) used for PostgreSQL data files. This is measured in disk pages, which are normally 8 kB each."
     },
