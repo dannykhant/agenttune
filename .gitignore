@@ -13,8 +13,10 @@ wheels/
 config.ini
 workload analyzer/workload_features
 .agents/
-configuration recommender/record/
-configuration recommender/log/
+configuration recommender/record/*
+configuration recommender/log/*
 .env
 knob selector/selected_knobs
+knob selector/renamed_knobs
 range pruner/pruned_knobs
+range pruner/renamed_knobs

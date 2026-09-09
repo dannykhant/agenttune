@@ -9,8 +9,8 @@ output_file=./workload analyzer/workload_features
 [knob selector]
 #LLM configuration
 api_key=
-base_url=
-model=gpt-4-0125-preview
+base_url=https://generativelanguage.googleapis.com/v1beta/openai/
+model=gemini-3.5-flash-lite
 #candidata knobs file
 candidate_knobs=./knob selector/candidate_knobs
 #the number of selected parameters
@@ -26,13 +26,13 @@ output_file=./knob selector/selected_knobs
 #candidata knobs with detailed description
 knob_details=./range pruner/knob_details.json
 #LLM configuration
-model=gpt-4-0125-preview
+model=gemini-3.5-flash-lite
 #knobs with pruned range
 output_file=./range pruner/pruned_knobs
 
 [configuration recommender]
 #LLM configuration
-model=gpt-4-0125-preview
+model=gemini-3.5-flash-lite
 #tree-search configuration
 top_k=2
 node_count=3
@@ -46,17 +46,17 @@ db_metric=throughput
 LLM_server_IP=localhost
 LLM_server_port=4000
 #DBMS to tune: mysql (default) or postgresql
-dbms=mysql
+dbms=postgresql
 #PostgreSQL settings (used when dbms=postgresql)
 PG_DataDir=/var/lib/postgresql/data
 PG_ServiceName=postgresql
 #how to run commands on the PostgreSQL host: ssh (default) or docker
-DB_RestartMethod=ssh
+DB_RestartMethod=docker
 #postgres container name (used when DB_RestartMethod=docker)
-PG_ContainerName=agenttune-pg
+PG_ContainerName=adco-postgres-production
 #ssh mode: run on the DB host, e.g. `systemctl restart postgresql`
 #docker mode: full docker CLI command, e.g. `docker restart agenttune-pg`
-PG_RestartCommand=systemctl restart postgresql
+PG_RestartCommand=docker restart agenttune-pg
 #DB_client configuration
 DB_IP=
 DB_IP_Password=
@@ -71,5 +71,4 @@ iteration=100
 #directory containing .sql query files (used by JOB/TPCDS benchmarks)
 QueryDir=
 #benchmarks (TPCC,TPCDS,SYSBENCH,JOB)
-benchmark=
-
+benchmark=SYSBENCH
