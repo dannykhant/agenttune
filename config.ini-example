@@ -1,74 +1,73 @@
 [workload analyzer]
-#queries file 
-workload_file=./workload analyzer/workloads/res.wg 
-#database schema file
-config_file=./workload analyzer/workloads/res.json
-#workload features file
-output_file=./workload analyzer/workload_features
+workload_file = ./workload analyzer/workloads/res.wg
+config_file = ./workload analyzer/workloads/res.json
+output_file = ./workload analyzer/workload_features
 
 [knob selector]
-#LLM configuration
-api_key=
-base_url=https://generativelanguage.googleapis.com/v1beta/openai/
-model=gemini-3.5-flash-lite
-#candidata knobs file
-candidate_knobs=./knob selector/candidate_knobs
-#the number of selected parameters
-knob_num=20
-#database and hardware information 
-database_kernel=RDS MySQL 5.7
-database_scale=10GB
-hardware=8 cores, 16 GB RAM
-#selected knobs file
-output_file=./knob selector/selected_knobs
+api_key =
+base_url = https://generativelanguage.googleapis.com/v1beta/openai/
+model = gemini-3.5-flash-lite
+candidate_knobs = ./knob selector/candidate_knobs
+knob_num = 20
+database_kernel = PostgreSQL 17
+database_scale = 2GB
+hardware = 2 cores, 2 GB RAM
+output_file = ./knob selector/selected_knobs
 
 [range pruner]
-#candidata knobs with detailed description
-knob_details=./range pruner/knob_details.json
-#LLM configuration
-model=gemini-3.5-flash-lite
-#knobs with pruned range
-output_file=./range pruner/pruned_knobs
+knob_details = ./range pruner/knob_details.json
+model = gemini-3.5-flash-lite
+output_file = ./range pruner/pruned_knobs
 
 [configuration recommender]
-#LLM configuration
-model=gemini-3.5-flash-lite
-#tree-search configuration
-top_k=2
-node_count=3
-#memory window size
-history_num=5
-#inner metrics
-metric_file=./configuration recommender/inner_metric
-#Performance indicators to be optimized
-db_metric=throughput
-#LLM_server configuration
-LLM_server_IP=localhost
-LLM_server_port=4000
-#DBMS to tune: mysql (default) or postgresql
-dbms=postgresql
-#PostgreSQL settings (used when dbms=postgresql)
-PG_DataDir=/var/lib/postgresql/data
-PG_ServiceName=postgresql
-#how to run commands on the PostgreSQL host: ssh (default) or docker
-DB_RestartMethod=docker
-#postgres container name (used when DB_RestartMethod=docker)
-PG_ContainerName=adco-postgres-production
-#ssh mode: run on the DB host, e.g. `systemctl restart postgresql`
-#docker mode: full docker CLI command, e.g. `docker restart agenttune-pg`
-PG_RestartCommand=docker restart agenttune-pg
-#DB_client configuration
-DB_IP=
-DB_IP_Password=
-#database configuration
-DB_User=
-DB_Password=
-DB_Host=
-DB_Name=
-DB_Port=
-#iteration (number of workload replies)
-iteration=100
-#directory containing .sql query files (used by JOB/TPCDS benchmarks)
-QueryDir=
-#benchmarks (TPCC,TPCDS,SYSBENCH,JOB)
-benchmark=SYSBENCH
+model = gemini-3.5-flash-lite
+top_k = 2
+node_count = 3
+history_num = 5
+metric_file = ./configuration recommender/inner_metric
+db_metric = throughput
+LLM_server_IP = localhost
+LLM_server_port = 4000
+dbms = postgresql
+PG_DataDir = /var/lib/postgresql/data
+PG_ServiceName = postgresql
+DB_RestartMethod = docker
+PG_ContainerName = adcoexp-db
+PG_RestartCommand = docker restart adcoexp-db
+DB_IP =
+DB_IP_Password =
+DB_User = postgres
+DB_Password = postgres
+DB_Host = pgdb
+DB_Name = agenttune
+DB_Port = 5432
+iteration = 100
+QueryDir =
+benchmark = SYSBENCH
+
+[postgres]
+database_kernel = PostgreSQL 17
+dbms = postgresql
+DB_IP =
+DB_IP_Password =
+DB_User = postgres
+DB_Password = postgres
+DB_Host = pgdb
+DB_Name = agenttune
+DB_Port = 5432
+PG_DataDir = /var/lib/postgresql/data
+PG_ServiceName = postgresql
+DB_RestartMethod = docker
+PG_ContainerName = adcoexp-db
+PG_RestartCommand = docker restart adcoexp-db
+
+[mysql]
+database_kernel = MySQL 8.0
+dbms = mysql
+DB_IP =
+DB_IP_Password =
+DB_User = root
+DB_Password = root
+DB_Host = mysql
+DB_Name = agenttune
+DB_Port = 3306
