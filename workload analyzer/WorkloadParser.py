@@ -67,9 +67,11 @@ class WP2(WP):
                 # print(real_tb_used)
                 for table_name in real_tb_used:
                     if table_name not in tbl_dict.keys():
+                        tb_tmp=self.dbs.getTableByName(table_name)
+                        if tb_tmp is None:
+                            continue
                         tbl_dict[table_name]=1
                         tbl_col_dict[table_name]={}
-                        tb_tmp=self.dbs.getTableByName(table_name)
                         # print(table_name)
                         for it in tb_tmp.col:
                             tbl_col_dict[table_name][it.name]=0
@@ -180,11 +182,16 @@ class WP2(WP):
         
         print("average table access count :",sumv/tokens.count(";"))
         print("average item returned count per query :",non_agg_count/tokens.count(";"))
-        print("order by logic ratio :",(order_by_num-desc_num)/order_by_num,"(asc):",desc_num/order_by_num,"(desc)")
+        if order_by_num > 0:
+            print("order by logic ratio :",(order_by_num-desc_num)/order_by_num,"(asc):",desc_num/order_by_num,"(desc)")
+        else:
+            print("order by logic ratio : 0.0 (asc): 0.0 (desc)")
         
+        pred_sum = sum(predicate_dict.values())
         print("where clause comparison condition ratio :")
         for i in predicate_type:
-            print("\t",i,predicate_dict[i]/sum(predicate_dict.values()))
+            ratio = predicate_dict[i] / pred_sum if pred_sum > 0 else 0.0
+            print("\t", i, ratio)
         
         print("table access pattern :")
         # tbl_dict record the access patterns of each table and column
