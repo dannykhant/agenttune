@@ -14,9 +14,9 @@ config.ini
 workload analyzer/workload_features
 .agents/
 configuration recommender/record/*
-!configuration recommender/record/optimal configuration
+!configuration recommender/record/.gitkeep
 configuration recommender/log/*
-!configuration recommender/log/sysbench_prepare.log
+!configuration recommender/log/.gitkeep
 .env
 knob selector/selected_knobs
 knob selector/renamed_knobs
