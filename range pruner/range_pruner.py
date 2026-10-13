@@ -109,6 +109,18 @@ def extract_knob_intervals_with_ids(text):
         braced = re.search(r"\{.*?\}", stripped, re.DOTALL)
         if braced:
             stripped = braced.group(0).strip()
+
+    def to_num(v):
+        if isinstance(v, bool):
+            return int(v)
+        if isinstance(v, (int, float)):
+            return v
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return None
+        return int(f) if f == int(f) else f
+
     if stripped.startswith("{"):
         try:
             data = json.loads(stripped)
@@ -116,16 +128,6 @@ def extract_knob_intervals_with_ids(text):
             data = None
         if isinstance(data, dict):
             parsed = {}
-            def to_num(v):
-                if isinstance(v, bool):
-                    return int(v)
-                if isinstance(v, (int, float)):
-                    return v
-                try:
-                    f = float(v)
-                except (TypeError, ValueError):
-                    return None
-                return int(f) if f == int(f) else f
             for knob_id, spec in data.items():
                 if not knob_id.startswith("knob") or not isinstance(spec, dict):
                     continue
@@ -148,6 +150,36 @@ def extract_knob_intervals_with_ids(text):
                 parsed[knob_id] = entry
             if parsed:
                 return sanitize_ranges(parsed)
+
+    # Some models (Gemini) emit a sequence of `"knobN": { ... }` blocks with no
+    # wrapping object and no separators between them; parse each block directly
+    # so pruned_knobs is populated instead of {}.
+    parsed = {}
+    for knob_id, block in re.findall(r'"(knob\d+)"\s*:?\s*(\{[^{}]*\})', text):
+        try:
+            spec = json.loads(block)
+        except (ValueError, TypeError):
+            continue
+        if not isinstance(spec, dict):
+            continue
+        min_value = to_num(spec.get("min_value"))
+        max_value = to_num(spec.get("max_value"))
+        step = to_num(spec.get("step"))
+        if min_value is None or max_value is None or step is None:
+            continue
+        entry = {
+            "min_value": min_value,
+            "max_value": max_value,
+            "step": step,
+            "type": knob_details.get(knob_id, {}).get("type", "integer"),
+            "description": knob_details.get(knob_id, {}).get("description", ""),
+        }
+        special = to_num(spec.get("special_value"))
+        if special is not None:
+            entry["special_value"] = special
+        parsed[knob_id] = entry
+    if parsed:
+        return sanitize_ranges(parsed)
 
     # Split by Knob Paragraph
     knob_blocks = re.split(r'\n\d+\.\s+\*\*(knob\d+)\s+\((.*?)\)\*\*:', text)
