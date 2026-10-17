@@ -8,8 +8,8 @@
     "wal_buffers": {
         "type": "integer",
         "description": "Sets the number of disk-page buffers in shared memory for WAL.",
-        "max": 2147475456,
-        "min": 262144
+        "max": 67108864,
+        "min": 16777216
     },
     "backend_flush_after": {
         "type": "integer",
@@ -285,8 +285,8 @@
     "effective_cache_size": {
         "type": "integer",
         "description": "Sets the planner's assumption about the total size of the data caches.",
-        "max": 1610612736,
-        "min": 1073741824
+        "max": 3221225472,
+        "min": 2147483648
     },
     "default_statistics_target": {
         "type": "integer",

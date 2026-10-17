@@ -224,9 +224,9 @@ def get_knob_native_bounds():
     """
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
-    cursor.execute("SELECT name, unit, min_val, max_val FROM pg_settings")
+    cursor.execute("SELECT name, unit, min_val, max_val, vartype FROM pg_settings")
     result = {}
-    for name, unit, min_val, max_val in cursor.fetchall():
+    for name, unit, min_val, max_val, vartype in cursor.fetchall():
         def to_num(v):
             if v is None:
                 return None
@@ -235,7 +235,7 @@ def get_knob_native_bounds():
             except (TypeError, ValueError):
                 return None
             return int(f) if f == int(f) else f
-        result[name] = {'unit': unit, 'min': to_num(min_val), 'max': to_num(max_val)}
+        result[name] = {'unit': unit, 'min': to_num(min_val), 'max': to_num(max_val), 'type': vartype}
     cursor.close()
     conn.close()
     return result
@@ -326,6 +326,18 @@ def set_knobs_and_restart(knob):
         native_value = value / factor
         if info is not None and info['min'] is not None and info['max'] is not None:
             native_value = min(max(native_value, info['min']), info['max'])
+        if (info and info.get('type') == 'integer') or original.get(name, {}).get('type') == 'integer':
+            native_value = int(round(native_value))
+        if name == 'wal_buffers' and native_value < 2048:
+            native_value = -1
+        elif name == 'effective_cache_size' and native_value < 393216:
+            native_value = 393216
+        elif name == 'vacuum_cost_delay' and native_value < 2:
+            native_value = 2
+        elif name == 'max_worker_processes' and native_value < 8:
+            native_value = 8
+        elif name == 'commit_delay' and native_value > 1000:
+            native_value = 1000
         if isinstance(native_value, float) and native_value.is_integer():
             native_value = int(native_value)
         named_config[name] = native_value
@@ -481,7 +493,7 @@ def test_by_sysbench(knob):
     if state != 0:
         return 0
 
-    tables = 50
+    tables = 10
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     cursor.execute("SELECT count(*) FROM information_schema.tables "
@@ -490,7 +502,7 @@ def test_by_sysbench(knob):
     cursor.close()
     conn.close()
 
-    sysbench_args = '--db-driver=pgsql --threads=32 --pgsql-host={} --pgsql-port={} --pgsql-user={} --pgsql-password={} --pgsql-db={} --tables={} --table-size=1000000'.format(
+    sysbench_args = '--db-driver=pgsql --threads=8 --pgsql-host={} --pgsql-port={} --pgsql-user={} --pgsql-password={} --pgsql-db={} --tables={} --table-size=100000'.format(
         db_config['host'], db_config['port'], db_config['user'],
         db_config['password'], db_config['dbname'], tables)
 
@@ -501,10 +513,13 @@ def test_by_sysbench(knob):
             sysbench_args, './configuration recommender/log/sysbench_prepare.log'))
 
     log_file = './configuration recommender/log/' + '{}.log'.format(int(time.time()))
-    command_run = 'sysbench {} --time=120 --report-interval=60 oltp_read_write run'.format(sysbench_args)
+    command_run = 'sysbench {} --time=30 --report-interval=10 oltp_read_write run'.format(sysbench_args)
     os.system(command_run + ' > "{}" '.format(log_file))
 
-    qps = sum([float(line.split()[8]) for line in open(log_file, 'r').readlines() if 'qps' in line][-int(120 / 60):]) / (int(120 / 60))
+    qps_lines = [float(line.split()[8]) for line in open(log_file, 'r').readlines() if 'qps' in line][-int(30 / 10):]
+    if not qps_lines:
+        return 0.0
+    qps = sum(qps_lines) / int(30 / 10)
     tps = float(qps / 20.0)
     return tps
 
@@ -560,9 +575,9 @@ if __name__ == "__main__":
     print(result)
 
     iteration = 0
-    best_knob = knob if throughput > 0 else []
+    best_knob = {}
     best_metric = []
-    best_throughput = throughput if throughput > 0 else 0
+    best_throughput = 0
     while iteration < int(config['configuration recommender']['iteration']):
         data_list = []
         for knob in result:
@@ -599,6 +614,18 @@ if __name__ == "__main__":
 
         result = response.json()
         iteration = iteration + 1
+
+    if config['configuration recommender']['benchmark'].strip().upper() == 'SYSBENCH':
+        try:
+            conn = psycopg2.connect(**db_config)
+            conn.autocommit = True
+            cursor = conn.cursor()
+            cursor.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+            cursor.execute("VACUUM;")
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Warning: failed to clean up sysbench tables: {e}")
 
     if best_knob:
         set_knobs_and_restart(best_knob)
