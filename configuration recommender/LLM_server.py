@@ -239,11 +239,11 @@ def process_data():
         if not check:  
             print("File is empty")
             data_str = last_result
-    
-    with open(filename, 'r') as f:
-        data_str = f.read()
-        # Split the data into individual JSON strings
-        json_strings = data_str.strip().split('\n')
+        else:
+            last_result = data_str
+
+    # Split the data into individual JSON strings
+    json_strings = [s for s in data_str.strip().split('\n') if s.strip()]
     
     top_k = sort_list(json_strings)
     with open('./configuration recommender/record/top_k', 'a') as f:

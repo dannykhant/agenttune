@@ -333,6 +333,10 @@ def set_knobs_and_restart(knob):
     conn = psycopg2.connect(**db_config)
     conn.autocommit = True
     cursor = conn.cursor()
+    cursor.execute("SELECT name FROM pg_file_settings WHERE sourcefile LIKE '%postgresql.auto.conf'")
+    if any(contexts.get(name) == 'postmaster' for (name,) in cursor.fetchall()):
+        needs_restart = True
+    cursor.execute("ALTER SYSTEM RESET ALL")
     for name, value in named_config.items():
         cursor.execute("ALTER SYSTEM SET {} = %s".format(name), (value,))
     cursor.close()
@@ -556,9 +560,9 @@ if __name__ == "__main__":
     print(result)
 
     iteration = 0
-    best_knob = []
+    best_knob = knob if throughput > 0 else []
     best_metric = []
-    best_throughput = 0
+    best_throughput = throughput if throughput > 0 else 0
     while iteration < int(config['configuration recommender']['iteration']):
         data_list = []
         for knob in result:
@@ -595,6 +599,9 @@ if __name__ == "__main__":
 
         result = response.json()
         iteration = iteration + 1
+
+    if best_knob:
+        set_knobs_and_restart(best_knob)
 
     with open("./configuration recommender/record/optimal configuration", "w", encoding="utf-8") as f:
         print("best_knob:", best_knob, file=f)
