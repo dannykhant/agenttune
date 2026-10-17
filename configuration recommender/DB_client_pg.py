@@ -560,6 +560,12 @@ if __name__ == "__main__":
     knob = get_current_knob()
     throughput = test_by_sysbench(knob)
     metric = get_current_metric()
+    # Seed the incumbent: the search may only win by beating the config it
+    # started from, otherwise AgentTune always installs one of its own samples
+    # even when every sample is worse than the original.
+    best_knob = knob
+    best_metric = metric
+    best_throughput = throughput
     data = {
         "knob": knob,
         "throughput": throughput,
@@ -575,9 +581,6 @@ if __name__ == "__main__":
     print(result)
 
     iteration = 0
-    best_knob = {}
-    best_metric = []
-    best_throughput = 0
     while iteration < int(config['configuration recommender']['iteration']):
         data_list = []
         for knob in result:
