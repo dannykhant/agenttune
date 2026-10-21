@@ -13,8 +13,10 @@ if _dbms and config.has_section(_dbms):
     for _sec in config.sections():
         if _sec in ('postgres', 'mysql'):
             continue
-        for _k in list(config[_sec]):
-            if _k in _src:
+        for _k in list(_src.keys()):
+            # The dbms section supplies defaults only; explicit per-section
+            # values (e.g. DB_Name pinned by the run script) always win.
+            if _k not in config[_sec]:
                 config[_sec][_k] = _src[_k]
 
 file_path = config['workload analyzer']['output_file']

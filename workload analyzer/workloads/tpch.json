@@ -427,6 +427,10 @@
                 0.2,
                 0.2
             ],
+            "Primary Key": {
+                "Name": "",
+                "Data Type": ""
+            },
             "Foreign Key": []
         },
         {
@@ -697,6 +701,10 @@
                 0.0625,
                 0.0625
             ],
+            "Primary Key": {
+                "Name": "",
+                "Data Type": ""
+            },
             "Foreign Key": []
         }
     ]
